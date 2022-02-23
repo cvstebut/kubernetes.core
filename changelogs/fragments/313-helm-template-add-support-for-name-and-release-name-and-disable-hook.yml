@@ -1,0 +1,3 @@
+---
+minor_changes:
+- helm_template - add name, release_name, and disable_hook as module arguments (https://github.com/ansible-collections/kubernetes.core/issues/313).
