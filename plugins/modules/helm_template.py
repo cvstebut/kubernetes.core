@@ -45,18 +45,43 @@ options:
       - Chart version to use. If this is not specified, the latest version is installed.
     required: false
     type: str
+  disable_hook:
+    description:
+      - Prevent hooks from running during install.
+    default: False
+    type: bool
+    version_added: 2.4.0
   include_crds:
     description:
-      - Include custom resource descriptions in rendered templates.
+      - Include custom resource definitions in rendered templates.
     required: false
     type: bool
     default: false
+  name:
+    description:
+      - Release name to use in rendered templates.
+    required: false
+    type: str
+    version_added: 2.4.0
   output_dir:
     description:
       - Output directory where templates will be written.
       - If the directory already exists, it will be overwritten.
     required: false
     type: path
+  release_name:
+    description:
+      - Use release name in the output-dir path.
+    required: false
+    type: bool
+    default: false
+    version_added: 2.4.0
+  release_namespace:
+    description:
+      - namespace scope for this request.
+    required: false
+    type: str
+    version_added: 2.4.0
   release_values:
     description:
         - Values to pass to chart.
@@ -136,12 +161,21 @@ def template(
     chart_ref,
     chart_repo_url=None,
     chart_version=None,
+    disable_hook=None,
+    name=None,
     output_dir=None,
     release_values=None,
+    release_name=None,
+    release_namespace=None,
     values_files=None,
     include_crds=False,
 ):
-    cmd += " template " + chart_ref
+    cmd += " template "
+
+    if name:
+        cmd += name + " "
+
+    cmd += chart_ref
 
     if chart_repo_url:
         cmd += " --repo=" + chart_repo_url
@@ -149,12 +183,21 @@ def template(
     if chart_version:
         cmd += " --version=" + chart_version
 
+    if disable_hook:
+        cmd += " --no-hooks"
+
     if output_dir:
         cmd += " --output-dir=" + output_dir
 
     if values_files:
         for values_file in values_files:
             cmd += " -f=" + values_file
+
+    if release_name:
+        cmd += " --release-name"
+
+    if release_namespace:
+        cmd += " -n " + release_namespace
 
     if release_values:
         fd, path = tempfile.mkstemp(suffix=".yml")
@@ -175,8 +218,12 @@ def main():
             chart_ref=dict(type="path", required=True),
             chart_repo_url=dict(type="str"),
             chart_version=dict(type="str"),
+            disable_hook=dict(type="bool", default=False),
             include_crds=dict(type="bool", default=False),
+            name=dict(type="str"),
             output_dir=dict(type="path"),
+            release_name=dict(type="bool", default=False),
+            release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),
             values_files=dict(type="list", default=[], elements="str"),
             update_repo_cache=dict(type="bool", default=False),
@@ -189,8 +236,12 @@ def main():
     chart_ref = module.params.get("chart_ref")
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
+    disable_hook = module.params.get("disable_hook")
     include_crds = module.params.get("include_crds")
+    name = module.params.get("name")
     output_dir = module.params.get("output_dir")
+    release_name = module.params.get("release_name")
+    release_namespace = module.params.get("release_namespace")
     release_values = module.params.get("release_values")
     values_files = module.params.get("values_files")
     update_repo_cache = module.params.get("update_repo_cache")
@@ -209,7 +260,11 @@ def main():
         chart_ref,
         chart_repo_url=chart_repo_url,
         chart_version=chart_version,
+        disable_hook=disable_hook,
+        name=name,
         output_dir=output_dir,
+        release_name=release_name,
+        release_namespace=release_namespace,
         release_values=release_values,
         values_files=values_files,
         include_crds=include_crds,

@@ -40,3 +40,91 @@ def test_template_with_release_values_and_values_files():
     assert args.f[0] == "values1.yml"
     assert args.f[1] == "values2.yml"
     assert len(args.f) == 3
+
+
+def test_template_with_releasenamespace():
+    my_chart_ref = "testref"
+    helm_cmd = "helm"
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("cmd")
+    parser.add_argument("template")
+    # to "simulate" helm template options, include two optional parameters NAME and CHART.
+    # if parsed string contains only one parameter, the value will be passed
+    # to CHART and NAME will be set to default value "release-name" as in helm template
+    parser.add_argument("NAME", nargs="?", default="release-name")
+    parser.add_argument("CHART", nargs="+")
+    parser.add_argument("-n", action="append")
+
+    ns = "istio-ingress-canary"
+    mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, release_namespace=ns)
+
+    args, unknown = parser.parse_known_args(mytemplate.split())
+
+    assert len(args.n) == 1
+    assert args.n[0] == ns
+
+
+def test_template_with_name():
+    my_chart_ref = "testref"
+    helm_cmd = "helm"
+    name = "mytestrelease"
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("cmd")
+    parser.add_argument("template")
+    # to "simulate" helm template options, include two optional parameters NAME and CHART.
+    # if parsed string contains only one parameter, the value will be passed
+    # to CHART and NAME will be set to default value "release-name" as in helm template
+    parser.add_argument("NAME", nargs="?", default="release-name")
+    parser.add_argument("CHART", nargs="+")
+
+    mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, name=name)
+
+    args, unknown = parser.parse_known_args(mytemplate.split())
+
+    assert args.NAME == name
+
+
+def test_template_with_releasename():
+    my_chart_ref = "testref"
+    helm_cmd = "helm"
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("cmd")
+    parser.add_argument("template")
+    # to "simulate" helm template options, include two optional parameters NAME and CHART.
+    # if parsed string contains only one parameter, the value will be passed
+    # to CHART and NAME will be set to default value "release-name" as in helm template
+    parser.add_argument("NAME", nargs="?", default="release-name")
+    parser.add_argument("CHART", nargs="+")
+    parser.add_argument("--release-name", dest="release_name", action="store_true")
+    parser.set_defaults(release_name=False)
+
+    mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, release_name=True)
+
+    args, unknown = parser.parse_known_args(mytemplate.split())
+
+    assert args.release_name is True
+
+
+def test_template_with_disablehook():
+    my_chart_ref = "testref"
+    helm_cmd = "helm"
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("cmd")
+    parser.add_argument("template")
+    # to "simulate" helm template options, include two optional parameters NAME and CHART.
+    # if parsed string contains only one parameter, the value will be passed
+    # to CHART and NAME will be set to default value "release-name" as in helm template
+    parser.add_argument("NAME", nargs="?", default="release-name")
+    parser.add_argument("CHART", nargs="+")
+    parser.add_argument("--no-hooks", dest="no_hooks", action="store_true")
+    parser.set_defaults(no_hooks=False)
+
+    mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, disable_hook=True)
+
+    args, unknown = parser.parse_known_args(mytemplate.split())
+
+    assert args.no_hooks is True
