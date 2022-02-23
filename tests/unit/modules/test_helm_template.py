@@ -151,7 +151,6 @@ def test_template_with_name():
 def test_template_with_releasename():
     my_chart_ref = "testref"
     helm_cmd = "helm"
-    release_name = "myreleasename"
     parser = argparse.ArgumentParser()
 
     parser.add_argument("cmd")
@@ -161,15 +160,14 @@ def test_template_with_releasename():
     # to CHART and NAME will be set to default value "release-name" as in helm template
     parser.add_argument("NAME", nargs="?", default="release-name")
     parser.add_argument("CHART", nargs="+")
-    parser.add_argument("--release-name")
+    parser.add_argument("--release-name", dest="release_name", action="store_true")
+    parser.set_defaults(release_name=False)
 
-    mytemplate = template(
-        cmd=helm_cmd, chart_ref=my_chart_ref, release_name=release_name
-    )
+    mytemplate = template(cmd=helm_cmd, chart_ref=my_chart_ref, release_name=True)
 
     args, unknown = parser.parse_known_args(mytemplate.split())
 
-    assert args.release_name == release_name
+    assert args.release_name is True
 
 
 def test_template_with_disablehook():
@@ -197,7 +195,6 @@ def test_template_with_disablehook():
 def test_template_with_name_releasevalues_releasenamespace_showonly_valuesfiles_disablehook():
     my_chart_ref = "testref"
     helm_cmd = "helm"
-    release_name = "myreleasename"
     name = "mytestrelease"
     ns = "istio-ingress-canary"
     rv = {"revision": "1-13-0", "revisionTags": ["canary"]}
@@ -213,10 +210,11 @@ def test_template_with_name_releasevalues_releasenamespace_showonly_valuesfiles_
     # to CHART and NAME will be set to default value "release-name" as in helm template
     parser.add_argument("NAME", nargs="?", default="release-name")
     parser.add_argument("CHART", nargs="+")
-    parser.add_argument("--release-name")
     parser.add_argument("-n", action="append")
     parser.add_argument("-f", action="append")
     parser.add_argument("-s", action="append")
+    parser.add_argument("--release-name", dest="release_name", action="store_true")
+    parser.set_defaults(release_name=False)
     parser.add_argument("--no-hooks", dest="no_hooks", action="store_true")
     parser.set_defaults(no_hooks=False)
 
@@ -224,7 +222,7 @@ def test_template_with_name_releasevalues_releasenamespace_showonly_valuesfiles_
         cmd=helm_cmd,
         chart_ref=my_chart_ref,
         name=name,
-        release_name=release_name,
+        release_name=True,
         release_namespace=ns,
         show_only=so,
         release_values=rv,
@@ -235,7 +233,7 @@ def test_template_with_name_releasevalues_releasenamespace_showonly_valuesfiles_
 
     assert len(args.n) == 1
     assert args.n[0] == ns
-    assert args.release_name == release_name
+    assert args.release_name is True
     assert args.NAME == name
     assert len(args.f) == 1
     assert len(args.s) == 2

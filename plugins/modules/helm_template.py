@@ -73,7 +73,8 @@ options:
     description:
       - Use release name in the output-dir path.
     required: false
-    type: str
+    type: bool
+    default: False
     version_added: 2.4.0
   release_namespace:
     description:
@@ -223,7 +224,7 @@ def template(
             cmd += " -f=" + values_file
 
     if release_name:
-        cmd += " --release-name " + release_name
+        cmd += " --release-name"
 
     if release_namespace:
         cmd += " -n " + release_namespace
@@ -251,7 +252,7 @@ def main():
             include_crds=dict(type="bool", default=False),
             name=dict(type="str"),
             output_dir=dict(type="path"),
-            release_name=dict(type="str"),
+            release_name=dict(type="bool", default=False),
             release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),
             show_only=dict(type="list", default=[], elements="str"),
