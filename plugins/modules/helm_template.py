@@ -45,12 +45,24 @@ options:
       - Chart version to use. If this is not specified, the latest version is installed.
     required: false
     type: str
+  disable_hook:
+    description:
+      - Prevent hooks from running during install.
+    default: False
+    type: bool
+    version_added: 2.4.0
   include_crds:
     description:
       - Include custom resource descriptions in rendered templates.
     required: false
     type: bool
     default: false
+  name:
+    description:
+      - Release name to use in rendered templates.
+    required: false
+    type: str
+    version_added: 2.4.0
   output_dir:
     description:
       - Output directory where templates will be written.
@@ -167,6 +179,8 @@ def template(
     chart_ref,
     chart_repo_url=None,
     chart_version=None,
+    disable_hook=None,
+    name=None,
     output_dir=None,
     show_only=None,
     release_values=None,
@@ -174,13 +188,21 @@ def template(
     values_files=None,
     include_crds=False,
 ):
-    cmd += " template " + chart_ref
+    cmd += " template "
+
+    if name:
+        cmd += name + " "
+
+    cmd += chart_ref
 
     if chart_repo_url:
         cmd += " --repo=" + chart_repo_url
 
     if chart_version:
         cmd += " --version=" + chart_version
+
+    if disable_hook:
+        cmd += " --no-hooks"
 
     if output_dir:
         cmd += " --output-dir=" + output_dir
@@ -215,7 +237,9 @@ def main():
             chart_ref=dict(type="path", required=True),
             chart_repo_url=dict(type="str"),
             chart_version=dict(type="str"),
+            disable_hook=dict(type="bool", default=False),
             include_crds=dict(type="bool", default=False),
+            name=dict(type="str"),
             output_dir=dict(type="path"),
             release_namespace=dict(type="str"),
             release_values=dict(type="dict", default={}, aliases=["values"]),
@@ -231,7 +255,9 @@ def main():
     chart_ref = module.params.get("chart_ref")
     chart_repo_url = module.params.get("chart_repo_url")
     chart_version = module.params.get("chart_version")
+    disable_hook = module.params.get("disable_hook")
     include_crds = module.params.get("include_crds")
+    name = module.params.get("name")
     output_dir = module.params.get("output_dir")
     show_only = module.params.get("show_only")
     release_namespace = module.params.get("release_namespace")
@@ -253,6 +279,8 @@ def main():
         chart_ref,
         chart_repo_url=chart_repo_url,
         chart_version=chart_version,
+        disable_hook=disable_hook,
+        name=name,
         output_dir=output_dir,
         release_namespace=release_namespace,
         release_values=release_values,
